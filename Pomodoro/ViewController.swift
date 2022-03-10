@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import AudioToolbox
 
 enum TimerStatus{
     case start
@@ -63,12 +64,22 @@ class ViewController: UIViewController {
             //repeating을 1초로 설정해 1초마다 반복되게 한다.
             self.timer?.setEventHandler(handler: { [weak self] in //캡쳐목록..?을 선언(나:메모리 누수방지를 위함으로 알고 있다)
                 //타이머가 동작할 때마다 이 클로저가 호출되게 된다.
-                self?.currentSeconds -= 1
-                debugPrint(self?.currentSeconds)
+                guard let self = self else {return}//일시적으로 self가 strong 레퍼런스가 되도록 만든다.
+                self.currentSeconds -= 1
+                let hour = self.currentSeconds / 3600
+                let minutes = (self.currentSeconds % 3600) / 60
+                let seconds = (self.currentSeconds % 3600) % 60
+                self.timerLabel.text = String(format: "%02d:%02d:%02d", hour, minutes, seconds) //%02d : 정수 숫자 두 자리
+                //progress를 시간에 따라 줄어들게 만들기
+                self.progressView.progress =  Float(self.currentSeconds) / Float(self.duration) //progress는 0부터 1까지의 값을 가진다.
+                debugPrint(self.progressView.progress)
                 
-                if self?.currentSeconds ?? 0 <= 0 {
+                if self.currentSeconds <= 0 {
                     //타이머 종료
-                    self?.stopTimer()
+                    self.stopTimer()
+                    //아이폰 기본 사운드 사용하기
+                    //https://iphonedev.wiki/index.php/AudioServices 에서 시스템 사운드 id를 알 수 있다.
+                    AudioServicesPlaySystemSound(1005)
                 }
             }) //타이머와 연동될 이벤트 핸들러를 만들어 준다.
             self.timer?.resume() //타이버 시작
