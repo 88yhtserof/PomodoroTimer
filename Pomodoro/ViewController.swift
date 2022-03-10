@@ -24,6 +24,7 @@ class ViewController: UIViewController {
     @IBOutlet weak var cancelButton: UIButton!
     @IBOutlet weak var datePicker: UIDatePicker!
     @IBOutlet weak var toggleButton: UIButton!
+    @IBOutlet weak var imageView: UIImageView!
     
     var duration = 60 //타이머에 설정된 시간을 초로 계산한 프로퍼티
     var timerStatus: TimerStatus = .end //타이머의 상태를 가진 프로퍼티
@@ -72,7 +73,16 @@ class ViewController: UIViewController {
                 self.timerLabel.text = String(format: "%02d:%02d:%02d", hour, minutes, seconds) //%02d : 정수 숫자 두 자리
                 //progress를 시간에 따라 줄어들게 만들기
                 self.progressView.progress =  Float(self.currentSeconds) / Float(self.duration) //progress는 0부터 1까지의 값을 가진다.
-                debugPrint(self.progressView.progress)
+                UIView.animate(withDuration: 0.5,delay: 0, animations: {
+                    self.imageView.transform = CGAffineTransform(rotationAngle: .pi) //뷰를 180도로 회전시킨다.
+                    //transform 프로퍼티를 사용해 뷰의 외형을 변경시켜준다.
+                    //CGAffineTransform은 구조체인데 가장 큰 특징은 뷰의 프레임을 계산하지 않고 CGAffineTransform을 사용해 2D 그래픽을 그릴 수 있다.
+                    //예) 뷰를 이동시키거나 스케일을 조정하거나 회전시키는 효과를 줄 수 있다.
+                })
+                //delay 프로퍼티를 0으로 설정해 애니메이션이 종료되자마자 바로 재시작하도록 한다.(애니메이션 반복)
+                UIView.animate(withDuration: 0.5,delay: 0.5, animations: {
+                    self.imageView.transform = CGAffineTransform(rotationAngle: .pi*2)
+                })//delay를 0.5로 설정해 180도 애니메이션이 끝난 후 해당 애니메이션이 동작하게 설정한다,
                 
                 if self.currentSeconds <= 0 {
                     //타이머 종료
@@ -93,8 +103,15 @@ class ViewController: UIViewController {
         }
         self.timerStatus = .end
         self.cancelButton.isEnabled = false
-        self.setTimerInfoViewVisible(isHidden: true) //timerLabel과 progress 숨기기
-        self.datePicker.isHidden = false
+//        self.setTimerInfoViewVisible(isHidden: true) //timerLabel과 progress 숨기기
+//        self.datePicker.isHidden = false
+        //투명도를 조절하는 alpha 값과 애니메이션을 사용해 사라지고 나타나는 모습을 부드럽게 처리한다.
+        UIView.animate(withDuration: 0.5, animations: {
+            self.timerLabel.alpha = 0
+            self.progressView.alpha = 0
+            self.datePicker.alpha = 1
+            self.imageView.transform = .identity //이미지가 원상태로 돌아오게 한다.
+        })
         self.toggleButton.isSelected = false //configureTogglrButton메서드에 의해 title이 '시작'으로 변경
         self.timer?.cancel() //타이머 종료
         self.timer = nil//메모리 해제, 이 작업을 하지 않으면 화면을 벗어나더라도 타이머가 계속 동작한다.
@@ -115,8 +132,14 @@ class ViewController: UIViewController {
         case .end:
             self.currentSeconds = self.duration
             self.timerStatus = .start
-            self.setTimerInfoViewVisible(isHidden: false) //timerLabel과 progress 보이게 하기
-            self.datePicker.isHidden = true
+//            self.setTimerInfoViewVisible(isHidden: false) //timerLabel과 progress 보이게 하기
+//            self.datePicker.isHidden = true
+            //투명도를 조절하는 alpha 값과 애니메이션을 사용해 사라지고 나타나는 모습을 부드럽게 처리한다.
+            UIView.animate(withDuration: 0.5, animations: {
+                self.timerLabel.alpha = 1
+                self.progressView.alpha = 1
+                self.datePicker.alpha = 0
+            })
             self.toggleButton.isSelected = true //configureToggleButton에 의해 title이 일시정지로 변경됨
             self.cancelButton.isEnabled = true
             self.startTimer()
